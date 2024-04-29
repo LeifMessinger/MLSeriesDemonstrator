@@ -7,7 +7,7 @@ android {
     buildToolsVersion "30.0.3"
 
     defaultConfig {
-        applicationId "com.example.mlseriesdemonstrator"
+        applicationId "com.example.whereis"
         minSdkVersion 23
         targetSdkVersion 31
         versionCode 1
@@ -16,9 +16,6 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    aaptOptions {
-        noCompress "tflite"
-    }
 
     buildTypes {
         release {
@@ -32,6 +29,10 @@ android {
     }
     buildFeatures {
         mlModelBinding true
+    }
+    namespace 'com.example.whereis'
+    androidResources {
+        noCompress 'tflite'
     }
 }
 
