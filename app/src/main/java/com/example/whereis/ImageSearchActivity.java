@@ -71,15 +71,18 @@ public class ImageSearchActivity extends AppCompatActivity {
     }
 
     private void filter(String query) {
-        List<File> filteredFiles = getImageFiles();
+        List<File> files = getImageFiles();
         if(query != ""){
-            for (File file : imageFiles) {
+            List<File> filteredFiles = new ArrayList<File>();
+            for (File file : files) {
                 if (file.getName().toLowerCase().contains(query.toLowerCase())) {
                     filteredFiles.add(file);
                 }
             }
+            adapter.setData(filteredFiles);
+        }else {
+            adapter.setData(files);
         }
-        adapter.setData(filteredFiles);
     }
 }
 
