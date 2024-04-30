@@ -17,8 +17,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.widget.EditText;
+import android.view.inputmethod.EditorInfo;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,6 +51,11 @@ public abstract class MLImageHelperActivity extends AppCompatActivity {
     private ImageView inputImageView;
     private TextView outputTextView;
 
+    public EditText getRenameEditText() {
+        return renameEditText;
+    }
+    private EditText renameEditText;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,17 +63,60 @@ public abstract class MLImageHelperActivity extends AppCompatActivity {
 
         inputImageView = findViewById(R.id.imageView);
         outputTextView = findViewById(R.id.textView);
+        renameEditText = findViewById(R.id.renameEditText);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_READ_EXTERNAL_STORAGE);
             }
         }
+
+        renameEditText.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        renameEditText.setOnEditorActionListener(new EditText.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    renameFile(v.getText().toString());
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        /*renameEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                renameFile(photoFile, s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });*/
     }
 
     private File getDataFileUri(String filename) {
         File file = new File(getApplicationContext().getFilesDir(), filename);
         return file;
+    }
+
+    public void renameFile(String name){
+        final String extension = photoFile.getName();
+        File renamedFile = new File(photoFile.getParent(), name);
+        //Keep making file paths until we find a path that doesn't have a file.
+        for(int counter = 1; renamedFile.exists() && counter < 5000; ++counter) {
+            renamedFile = new File(photoFile.getParent(), name + counter + extension);
+        }
+
+        if (!photoFile.renameTo(renamedFile)) {
+            // Show an error toast
+            Toast.makeText(this, "Couldn't rename pic!", Toast.LENGTH_SHORT).show();
+        }else {
+            Toast.makeText(this, "Renamed file to: " + name, Toast.LENGTH_SHORT).show();
+            photoFile = renamedFile;
+        }
     }
 
     public void onTakeImage(View view) {
@@ -113,7 +166,7 @@ public abstract class MLImageHelperActivity extends AppCompatActivity {
         int targetW = inputImageView.getWidth();
         int targetH = inputImageView.getHeight();
 
-        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+                BitmapFactory.Options bmOptions = new BitmapFactory.Options();
         bmOptions.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(photoFile.getAbsolutePath());
         int photoW = bmOptions.outWidth;

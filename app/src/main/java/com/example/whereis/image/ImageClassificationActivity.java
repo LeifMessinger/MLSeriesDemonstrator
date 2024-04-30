@@ -28,24 +28,6 @@ public class ImageClassificationActivity extends MLImageHelperActivity {
         return fileName.substring(fileName.lastIndexOf('.'));
     }
 
-    private void renameFile(File photoFile, String name){
-        final String baseName = name; //Gotta cap off the characters
-        final String extension = getExtension(photoFile.getName());
-        int counter = 1;
-        File renamedFile = new File(photoFile.getParent(), baseName);
-        while (renamedFile.exists()) {
-            counter++;
-            renamedFile = new File(photoFile.getParent(), baseName + counter + extension);
-        }
-
-        if (!photoFile.renameTo(renamedFile)) {
-            // Show an error toast
-            Toast.makeText(this, "Couldn't rename pic!", Toast.LENGTH_SHORT).show();
-        }else{
-            Toast.makeText(this, "Renamed file to: " + baseName, Toast.LENGTH_SHORT).show();
-        }
-    }
-
     @Override
     protected void runDetection(Bitmap bitmap, File photoFile) {
         InputImage inputImage = InputImage.fromBitmap(bitmap, 0);
@@ -54,12 +36,16 @@ public class ImageClassificationActivity extends MLImageHelperActivity {
            StringBuilder sb = new StringBuilder();
            if(imageLabels.isEmpty()){
                sb.append("CouldNotClassify");
+               //Don't rename the file. The timestamp is better info than "CouldNotClassify"
            } else {
                for (ImageLabel label : imageLabels) {
                    sb.append(label.getText()).append(": ").append(label.getConfidence()).append("\n");
                    newFileNameBuilder.append(label.getText());
                }
-               renameFile(photoFile, newFileNameBuilder.toString().substring(0,Math.min(newFileNameBuilder.length(), 100)));
+               //Edit the editText from the parent and hope that it calls rename text
+               String resultBaseName = newFileNameBuilder.toString().substring(0, Math.min(newFileNameBuilder.length(), 100));
+               getRenameEditText().setText(resultBaseName);
+               renameFile(resultBaseName);
            }
 
            if (imageLabels.isEmpty()) {
